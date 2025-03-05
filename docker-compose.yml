@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:13
+    # env_file:
+    #   - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - auth_network
+
+  backend:
+    env_file:
+      - .env
+    build: ./backend
+    ports:
+      - "50051:50051"
+    depends_on:
+      - postgres
+    networks:
+      - auth_network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:50051"
+    depends_on:
+      - backend
+    networks:
+      - auth_network
+
+volumes:
+  postgres_data:
+
+networks:
+  auth_network:
+    driver: bridge
